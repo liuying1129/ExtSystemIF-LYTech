@@ -142,6 +142,18 @@ object frmMain: TfrmMain
       ReadOnly = True
       TabOrder = 6
     end
+    object LabeledEdit8: TLabeledEdit
+      Left = 515
+      Top = 25
+      Width = 140
+      Height = 21
+      Color = clMenu
+      EditLabel.Width = 52
+      EditLabel.Height = 13
+      EditLabel.Caption = #30003#35831#26102#38388
+      ReadOnly = True
+      TabOrder = 7
+    end
   end
   object Panel3: TPanel
     Left = 0

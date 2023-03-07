@@ -30,6 +30,7 @@ type
     Panel4: TPanel;
     BitBtn1: TBitBtn;
     UniQuery1: TUniQuery;
+    LabeledEdit8: TLabeledEdit;
     procedure LabeledEdit1KeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
@@ -89,10 +90,11 @@ begin
 
   LabeledEdit2.Text:=UniQryTemp22.fieldbyname('name').AsString;
   LabeledEdit3.Text:=UniQryTemp22.fieldbyname('sex').AsString;
-  LabeledEdit4.Text:=UniQryTemp22.fieldbyname('age').AsString;
+  LabeledEdit4.Text:=UniQryTemp22.fieldbyname('age').AsString+UniQryTemp22.fieldbyname('age_unit').AsString;
   LabeledEdit5.Text:=UniQryTemp22.fieldbyname('reqdept').AsString;
   LabeledEdit6.Text:=UniQryTemp22.fieldbyname('write_name').AsString;
   LabeledEdit7.Text:=UniQryTemp22.fieldbyname('barcode').AsString;
+  LabeledEdit8.Text:=UniQryTemp22.fieldbyname('write_time').AsString;
 
   Memo1.Lines.Clear;
   while not UniQryTemp22.Eof do
