@@ -11,7 +11,6 @@ type
   TfrmMain = class(TForm)
     UniConnection1: TUniConnection;
     DataSource1: TDataSource;
-    ADOQuery1: TADOQuery;
     Panel1: TPanel;
     Label1: TLabel;
     LabeledEdit1: TLabeledEdit;
@@ -69,6 +68,7 @@ var
   BigObjectJYYZ:ISuperObject;
 
   UniQryTemp22:TUniQuery;
+  ADOTemp22:TADOQuery;
 begin
   if key<>13 then exit;
 
@@ -99,28 +99,33 @@ begin
   Memo1.Lines.Clear;
   while not UniQryTemp22.Eof do
   begin
-    Memo1.Lines.Add('HIS组合项目代码:'+UniQryTemp22.fieldbyname('order_id').AsString+'   HIS组合项目名称:'+UniQryTemp22.fieldbyname('itemname').AsString+'   体检号:'+UniQryTemp22.fieldbyname('reg_id').AsString+'   外部系统项目申请编号:'+UniQryTemp22.fieldbyname('request_no').AsString);
+    Memo1.Lines.Add('【HIS组合项目代码】'+UniQryTemp22.fieldbyname('order_id').AsString+';【HIS组合项目名称】'+UniQryTemp22.fieldbyname('itemname').AsString+';【体检号】'+UniQryTemp22.fieldbyname('reg_id').AsString+';【外部系统项目申请编号】'+UniQryTemp22.fieldbyname('request_no').AsString);
 
-    ADOQuery1.Close;
-    ADOQuery1.SQL.Clear;
-    ADOQuery1.SQL.Text:='select ci.Id '+
+    ADOTemp22:=TADOQuery.Create(nil);
+    ADOTemp22.Connection:=ADOConnection1;
+    ADOTemp22.Close;
+    ADOTemp22.SQL.Clear;
+    ADOTemp22.SQL.Text:='select ci.Id,ci.Name '+
                         'from combinitem ci,HisCombItem hci '+
                         'where ci.Unid=hci.CombUnid and hci.ExtSystemId=''HIS'' '+
                         'and hci.HisItem='''+UniQryTemp22.fieldbyname('order_id').AsString+''' ';
-    ADOQuery1.Open;
+    ADOTemp22.Open;
     ArrayYZMX:=SA([]);
-    while not ADOQuery1.Eof do
+    while not ADOTemp22.Eof do
     begin
+      Memo1.Lines.Add('LIS对应的组合项目【'+ADOTemp22.fieldbyname('Id').AsString+'】'+ADOTemp22.fieldbyname('Name').AsString);
+
       ObjectYZMZ:=SO;
-      ObjectYZMZ.S['LIS组合项目代码'] := ADOQuery1.fieldbyname('Id').AsString;
+      ObjectYZMZ.S['LIS组合项目代码'] := ADOTemp22.fieldbyname('Id').AsString;
       ObjectYZMZ.S['条码号'] := UniQryTemp22.fieldbyname('barcode').AsString;
       ObjectYZMZ.S['外部系统项目申请编号'] := UniQryTemp22.fieldbyname('request_no').AsString;
 
       ArrayYZMX.AsArray.Add(ObjectYZMZ);
       ObjectYZMZ:=nil;
       
-      ADOQuery1.Next;
+      ADOTemp22.Next;
     end;
+    ADOTemp22.Free;
 
     ObjectJYYZ:=SO;
     ObjectJYYZ.S['患者姓名']:=UniQryTemp22.fieldbyname('name').AsString;
@@ -171,8 +176,6 @@ begin
   ADOConnection1.ConnectionString:=LIS_CONNSTR;
   ADOConnection1.LoginPrompt:=false;
   ADOConnection1.Connected:=true;
-
-  ADOQuery1.Connection:=ADOConnection1;
 end;
 
 procedure TfrmMain.BitBtn1Click(Sender: TObject);

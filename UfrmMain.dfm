@@ -205,19 +205,13 @@ object frmMain: TfrmMain
     Left = 32
     Top = 280
   end
-  object ADOQuery1: TADOQuery
-    Connection = ADOConnection1
-    Parameters = <>
-    Left = 613
-    Top = 8
-  end
   object ADOConnection1: TADOConnection
     ConnectionString = 
       'Provider=SQLOLEDB.1;Password=Yklissa123;Persist Security Info=Tr' +
       'ue;User ID=sa;Initial Catalog=YkLis;Data Source=202.96.1.105'
     LoginPrompt = False
     Provider = 'SQLOLEDB.1'
-    Left = 581
+    Left = 618
     Top = 8
   end
   object UniQuery1: TUniQuery
