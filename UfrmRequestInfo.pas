@@ -20,6 +20,7 @@ type
     DateTimePicker2: TDateTimePicker;
     Label1: TLabel;
     Label2: TLabel;
+    LabeledEdit3: TLabeledEdit;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure BitBtn1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -57,17 +58,19 @@ end;
 
 procedure TfrmRequestInfo.BitBtn1Click(Sender: TObject);
 var
-  ssName,ssBarcode:String;
+  ssName,ssBarcode,ssReg_ID:String;
 begin
   ssName:='';
   ssBarcode:='';
+  ssReg_ID:='';
   
   if trim(LabeledEdit1.Text)<>'' then ssName:=' and name='''+LabeledEdit1.Text+''' ';
   if trim(LabeledEdit2.Text)<>'' then ssBarcode:=' and barcode='''+LabeledEdit2.Text+''' ';
+  if trim(LabeledEdit3.Text)<>'' then ssReg_ID:=' and reg_id='''+LabeledEdit3.Text+''' ';
 
   UniQuery1.Close;
   UniQuery1.SQL.Clear;
-  UniQuery1.SQL.Text:='select * from LIS_REQUEST where write_time between :DateTimePicker1 and :DateTimePicker2'+ssName+ssBarcode;
+  UniQuery1.SQL.Text:='select * from LIS_REQUEST where write_time between :DateTimePicker1 and :DateTimePicker2'+ssName+ssBarcode+ssReg_ID;
   UniQuery1.ParamByName('DateTimePicker1').Value:=DateTimePicker1.DateTime;
   UniQuery1.ParamByName('DateTimePicker2').Value:=DateTimePicker2.DateTime;
   UniQuery1.Open;

@@ -38,7 +38,7 @@ object frmRequestInfo: TfrmRequestInfo
       Caption = #32467#26463#26085#26399
     end
     object BitBtn1: TBitBtn
-      Left = 601
+      Left = 673
       Top = 25
       Width = 75
       Height = 25
@@ -47,7 +47,7 @@ object frmRequestInfo: TfrmRequestInfo
       OnClick = BitBtn1Click
     end
     object LabeledEdit1: TLabeledEdit
-      Left = 288
+      Left = 241
       Top = 27
       Width = 60
       Height = 21
@@ -57,7 +57,7 @@ object frmRequestInfo: TfrmRequestInfo
       TabOrder = 1
     end
     object LabeledEdit2: TLabeledEdit
-      Left = 406
+      Left = 309
       Top = 27
       Width = 170
       Height = 21
@@ -83,6 +83,16 @@ object frmRequestInfo: TfrmRequestInfo
       Date = 36524.999988425920000000
       Time = 36524.999988425920000000
       TabOrder = 4
+    end
+    object LabeledEdit3: TLabeledEdit
+      Left = 493
+      Top = 27
+      Width = 170
+      Height = 21
+      EditLabel.Width = 39
+      EditLabel.Height = 13
+      EditLabel.Caption = #20307#26816#21495
+      TabOrder = 5
     end
   end
   object DBGrid1: TDBGrid

@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, DB, DBAccess, Uni, MemDS, Grids, DBGrids,
-  Buttons,OracleUniProvider, ADODB;
+  Buttons,OracleUniProvider, ADODB,IniFiles;
 
 type
   TfrmMain = class(TForm)
@@ -33,6 +33,8 @@ type
   private
     { Private declarations }
     procedure LoadGroupName(const comboBox:TcomboBox;const ASel:string);
+    function MakeAdoDBConn:boolean;
+    function MakeUniDBConn:boolean;
   public
     { Public declarations }
   end;
@@ -49,10 +51,12 @@ uses superobject, UfrmRequestInfo;
 procedure RequestForm2Lis(const AAdoconnstr,ARequestJSON,CurrentWorkGroup:PChar);stdcall;external 'Request2Lis.dll';
 function UnicodeToChinese(const AUnicodeStr:PChar):PChar;stdcall;external 'LYFunction.dll';
 procedure WriteLog(const ALogStr: Pchar);stdcall;external 'LYFunction.dll';
+function DeCryptStr(aStr: Pchar; aKey: Pchar): Pchar;stdcall;external 'LYFunction.dll';//解密
+function ShowOptionForm(const pCaption,pTabSheetCaption,pItemInfo,pInifile:Pchar):boolean;stdcall;external 'OptionSetForm.dll';
 
 const
-  LIS_CONNSTR='Provider=SQLOLEDB.1;Password=Yklissa123;Persist Security Info=True;User ID=sa;Initial Catalog=YkLis;Data Source=202.96.1.105';
-
+  CryptStr='lc';
+  
 procedure TfrmMain.LabeledEdit1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
@@ -148,7 +152,7 @@ begin
     ArrayJYYZ:=nil;
 
     //WriteLog(UnicodeToChinese(PChar(AnsiString(BigObjectJYYZ.AsJson))));
-    RequestForm2Lis(LIS_CONNSTR,UnicodeToChinese(PChar(AnsiString(BigObjectJYYZ.AsJson))),PChar(ComboBox1.Text));
+    RequestForm2Lis(PChar(AnsiString(ADOConnection1.ConnectionString)),UnicodeToChinese(PChar(AnsiString(BigObjectJYYZ.AsJson))),PChar(ComboBox1.Text));
     BigObjectJYYZ:=nil;
 
     UniQryTemp22.Next;
@@ -158,17 +162,8 @@ end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
-  UniConnection1.ProviderName:='Oracle';
-  UniConnection1.Server:='10.161.97.1:1521:orcl';
-  UniConnection1.Username:='LYPEIS';
-  UniConnection1.Password:='lypeis';
-  UniConnection1.SpecificOptions.Values['Direct']:='True';
-  UniConnection1.LoginPrompt:=false;
-  UniConnection1.Connect;
-
-  ADOConnection1.ConnectionString:=LIS_CONNSTR;
-  ADOConnection1.LoginPrompt:=false;
-  ADOConnection1.Connected:=true;
+  MakeUniDBConn;
+  MakeAdoDBConn;
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
@@ -205,6 +200,114 @@ end;
 procedure TfrmMain.SpeedButton1Click(Sender: TObject);
 begin
   frmRequestInfo.ShowModal;
+end;
+
+function TfrmMain.MakeAdoDBConn: boolean;
+var
+  newconnstr,ss: string;
+  Ini: tinifile;
+  userid, password, datasource, initialcatalog: string;{, provider}
+  ifIntegrated:boolean;//是否集成登录模式
+
+  pInStr,pDeStr:Pchar;
+  i:integer;
+  Label labReadIni;
+begin
+  result:=false;
+
+  labReadIni:
+  Ini := tinifile.Create(ChangeFileExt(Application.ExeName,'.ini'));
+  datasource := Ini.ReadString('连接LIS数据库', '服务器', '');
+  initialcatalog := Ini.ReadString('连接LIS数据库', '数据库', '');
+  ifIntegrated:=ini.ReadBool('连接LIS数据库','集成登录模式',false);
+  userid := Ini.ReadString('连接LIS数据库', '用户', '');
+  password := Ini.ReadString('连接LIS数据库', '口令', '107DFC967CDCFAAF');
+  Ini.Free;
+  //======解密password
+  pInStr:=pchar(password);
+  pDeStr:=DeCryptStr(pInStr,Pchar(CryptStr));
+  setlength(password,length(pDeStr));
+  for i :=1  to length(pDeStr) do password[i]:=pDeStr[i-1];
+  //==========
+
+  newconnstr :='';
+  newconnstr := newconnstr + 'user id=' + UserID + ';';
+  newconnstr := newconnstr + 'password=' + Password + ';';
+  newconnstr := newconnstr + 'data source=' + datasource + ';';
+  newconnstr := newconnstr + 'Initial Catalog=' + initialcatalog + ';';
+  newconnstr := newconnstr + 'provider=' + 'SQLOLEDB.1' + ';';
+  //Persist Security Info,表示ADO在数据库连接成功后是否保存密码信息
+  //ADO缺省为True,ADO.net缺省为False
+  //程序中会传ADOConnection信息给TADOLYQuery,故设置为True
+  newconnstr := newconnstr + 'Persist Security Info=True;';
+  if ifIntegrated then
+    newconnstr := newconnstr + 'Integrated Security=SSPI;';
+  try
+    ADOConnection1.Connected := false;
+    ADOConnection1.ConnectionString := newconnstr;
+    ADOConnection1.Connected := true;
+    result:=true;
+  except
+  end;
+  if not result then
+  begin
+    ss:='服务器'+#2+'Edit'+#2+#2+'0'+#2+#2+#3+
+        '数据库'+#2+'Edit'+#2+#2+'0'+#2+#2+#3+
+        '集成登录模式'+#2+'CheckListBox'+#2+#2+'0'+#2+'启用该模式,则用户及口令无需填写'+#2+#3+
+        '用户'+#2+'Edit'+#2+#2+'0'+#2+#2+#3+
+        '口令'+#2+'Edit'+#2+#2+'0'+#2+#2+'1';
+    if ShowOptionForm('连接LIS数据库','连接LIS数据库',Pchar(ss),Pchar(ChangeFileExt(Application.ExeName,'.ini'))) then
+      goto labReadIni else application.Terminate;
+  end;
+end;
+
+function TfrmMain.MakeUniDBConn: boolean;
+var
+  ss: string;
+  Ini: tinifile;
+  userid, password, datasource, provider: string;
+
+  pInStr,pDeStr:Pchar;
+  i:integer;
+  Label labReadIni;
+begin
+  result:=false;
+
+  labReadIni:
+  Ini := tinifile.Create(ChangeFileExt(Application.ExeName,'.ini'));
+  provider := Ini.ReadString('连接HIS数据库', '数据提供者', '');
+  datasource := Ini.ReadString('连接HIS数据库', '服务器', '');
+  userid := Ini.ReadString('连接HIS数据库', '用户', '');
+  password := Ini.ReadString('连接HIS数据库', '口令', '107DFC967CDCFAAF');
+  Ini.Free;
+  //======解密password
+  pInStr:=pchar(password);
+  pDeStr:=DeCryptStr(pInStr,Pchar(CryptStr));
+  setlength(password,length(pDeStr));
+  for i :=1  to length(pDeStr) do password[i]:=pDeStr[i-1];
+  //==========
+
+  try
+    UniConnection1.Connected := false;
+    UniConnection1.ProviderName:=provider;
+    UniConnection1.Server:=datasource;//'10.161.97.1:1521:orcl';
+    UniConnection1.Username:=userid;
+    UniConnection1.Password:=password;
+    UniConnection1.SpecificOptions.Values['Direct']:='True';
+    UniConnection1.LoginPrompt:=false;
+    UniConnection1.Connect;
+    result:=true;
+  except
+  end;
+  if not result then
+  begin
+    ss:='数据提供者'+#2+'Edit'+#2+#2+'0'+#2+#2+#3+
+        '服务器'+#2+'Edit'+#2+#2+'0'+#2+#2+#3+
+        '用户'+#2+'Edit'+#2+#2+'0'+#2+#2+#3+
+        '口令'+#2+'Edit'+#2+#2+'0'+#2+#2+'1';
+    if ShowOptionForm('连接HIS数据库','连接HIS数据库',Pchar(ss),Pchar(ChangeFileExt(Application.ExeName,'.ini'))) then
+      goto labReadIni else application.Terminate;
+  end;
 end;
 
 end.
