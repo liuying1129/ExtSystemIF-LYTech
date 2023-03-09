@@ -3,7 +3,8 @@ program ExtSystemIFLYTech;
 uses
   Forms,
   UfrmMain in 'UfrmMain.pas' {frmMain},
-  superobject in 'superobject.pas';
+  superobject in 'superobject.pas',
+  UfrmRequestInfo in 'UfrmRequestInfo.pas' {frmRequestInfo};
 
 {$R *.res}
 

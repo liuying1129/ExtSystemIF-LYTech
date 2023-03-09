@@ -10,7 +10,6 @@ uses
 type
   TfrmMain = class(TForm)
     UniConnection1: TUniConnection;
-    DataSource1: TDataSource;
     Panel1: TPanel;
     Label1: TLabel;
     LabeledEdit1: TLabeledEdit;
@@ -24,17 +23,13 @@ type
     LabeledEdit6: TLabeledEdit;
     LabeledEdit7: TLabeledEdit;
     Memo1: TMemo;
-    Panel3: TPanel;
-    DBGrid1: TDBGrid;
-    Panel4: TPanel;
-    BitBtn1: TBitBtn;
-    UniQuery1: TUniQuery;
     LabeledEdit8: TLabeledEdit;
+    SpeedButton1: TSpeedButton;
     procedure LabeledEdit1KeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
-    procedure BitBtn1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure SpeedButton1Click(Sender: TObject);
   private
     { Private declarations }
     procedure LoadGroupName(const comboBox:TcomboBox;const ASel:string);
@@ -47,7 +42,7 @@ var
 
 implementation
 
-uses superobject;
+uses superobject, UfrmRequestInfo;
 
 {$R *.dfm}
 
@@ -171,19 +166,9 @@ begin
   UniConnection1.LoginPrompt:=false;
   UniConnection1.Connect;
 
-  UniQuery1.Connection:=UniConnection1;
-
   ADOConnection1.ConnectionString:=LIS_CONNSTR;
   ADOConnection1.LoginPrompt:=false;
   ADOConnection1.Connected:=true;
-end;
-
-procedure TfrmMain.BitBtn1Click(Sender: TObject);
-begin
-  UniQuery1.Close;
-  UniQuery1.SQL.Clear;
-  UniQuery1.SQL.Text:='select * from LIS_REQUEST order by reg_id';
-  UniQuery1.Open;
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
@@ -215,6 +200,11 @@ begin
       adotemp3.Next;
      end;
      adotemp3.Free;
+end;
+
+procedure TfrmMain.SpeedButton1Click(Sender: TObject);
+begin
+  frmRequestInfo.ShowModal;
 end;
 
 end.

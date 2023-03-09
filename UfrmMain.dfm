@@ -32,6 +32,17 @@ object frmMain: TfrmMain
       Height = 13
       Caption = #24037#20316#32452
     end
+    object SpeedButton1: TSpeedButton
+      Left = 660
+      Top = 11
+      Width = 23
+      Height = 22
+      Hint = #26597#30475#33713#22495#30003#35831#21333
+      Caption = #65311
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = SpeedButton1Click
+    end
     object LabeledEdit1: TLabeledEdit
       Left = 386
       Top = 12
@@ -58,8 +69,8 @@ object frmMain: TfrmMain
     Left = 0
     Top = 41
     Width = 690
-    Height = 208
-    Align = alTop
+    Height = 426
+    Align = alClient
     TabOrder = 1
     object LabeledEdit2: TLabeledEdit
       Left = 184
@@ -137,7 +148,7 @@ object frmMain: TfrmMain
       Left = 8
       Top = 62
       Width = 673
-      Height = 125
+      Height = 355
       Color = clMenu
       ReadOnly = True
       TabOrder = 6
@@ -155,55 +166,9 @@ object frmMain: TfrmMain
       TabOrder = 7
     end
   end
-  object Panel3: TPanel
-    Left = 0
-    Top = 249
-    Width = 690
-    Height = 218
-    Align = alClient
-    TabOrder = 2
-    object DBGrid1: TDBGrid
-      Left = 1
-      Top = 1
-      Width = 688
-      Height = 175
-      Align = alClient
-      Color = clMenu
-      DataSource = DataSource1
-      ReadOnly = True
-      TabOrder = 0
-      TitleFont.Charset = ANSI_CHARSET
-      TitleFont.Color = clWindowText
-      TitleFont.Height = -13
-      TitleFont.Name = #23435#20307
-      TitleFont.Style = []
-    end
-    object Panel4: TPanel
-      Left = 1
-      Top = 176
-      Width = 688
-      Height = 41
-      Align = alBottom
-      TabOrder = 1
-      object BitBtn1: TBitBtn
-        Left = 24
-        Top = 8
-        Width = 113
-        Height = 25
-        Caption = #26174#31034#25152#26377#30003#35831#21333
-        TabOrder = 0
-        OnClick = BitBtn1Click
-      end
-    end
-  end
   object UniConnection1: TUniConnection
-    Left = 650
+    Left = 608
     Top = 8
-  end
-  object DataSource1: TDataSource
-    DataSet = UniQuery1
-    Left = 32
-    Top = 280
   end
   object ADOConnection1: TADOConnection
     ConnectionString = 
@@ -211,12 +176,7 @@ object frmMain: TfrmMain
       'ue;User ID=sa;Initial Catalog=YkLis;Data Source=202.96.1.105'
     LoginPrompt = False
     Provider = 'SQLOLEDB.1'
-    Left = 618
+    Left = 576
     Top = 8
-  end
-  object UniQuery1: TUniQuery
-    Connection = UniConnection1
-    Left = 66
-    Top = 280
   end
 end
