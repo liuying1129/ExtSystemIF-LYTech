@@ -98,6 +98,7 @@ begin
   Memo1.Lines.Clear;
   while not UniQryTemp22.Eof do
   begin
+    if Memo1.Lines.Text<>'' then Memo1.Lines.Add('==============================================================================================');
     Memo1.Lines.Add('【HIS组合项目代码】'+UniQryTemp22.fieldbyname('order_id').AsString+';【HIS组合项目名称】'+UniQryTemp22.fieldbyname('itemname').AsString+';【体检号】'+UniQryTemp22.fieldbyname('reg_id').AsString+';【外部系统项目申请编号】'+UniQryTemp22.fieldbyname('request_no').AsString);
 
     ADOTemp22:=TADOQuery.Create(nil);
