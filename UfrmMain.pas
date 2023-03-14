@@ -77,6 +77,10 @@ begin
     exit;
   end;
 
+  if trim((Sender as TLabeledEdit).Text)='' then exit;
+
+  (Sender as TLabeledEdit).Enabled:=false;//为了防止没处理完又扫描下一个条码
+
   UniQryTemp22:=TUniQuery.Create(nil);
   UniQryTemp22.Connection:=UniConnection1;
   UniQryTemp22.Close;
@@ -85,7 +89,6 @@ begin
   UniQryTemp22.Open;
 
   (Sender as TLabeledEdit).Clear;
-  if (Sender as TLabeledEdit).CanFocus then (Sender as TLabeledEdit).SetFocus; 
 
   LabeledEdit2.Text:=UniQryTemp22.fieldbyname('name').AsString;
   LabeledEdit3.Text:=UniQryTemp22.fieldbyname('sex').AsString;
@@ -159,6 +162,9 @@ begin
     UniQryTemp22.Next;
   end;
   UniQryTemp22.Free;
+  
+  (Sender as TLabeledEdit).Enabled:=true;
+  if (Sender as TLabeledEdit).CanFocus then (Sender as TLabeledEdit).SetFocus; 
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
