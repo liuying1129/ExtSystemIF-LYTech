@@ -43,8 +43,15 @@ object frmMain: TfrmMain
       ShowHint = True
       OnClick = SpeedButton1Click
     end
+    object Label2: TLabel
+      Left = 222
+      Top = 15
+      Width = 39
+      Height = 13
+      Caption = #32852#26426#21495
+    end
     object LabeledEdit1: TLabeledEdit
-      Left = 386
+      Left = 481
       Top = 12
       Width = 170
       Height = 21
@@ -63,6 +70,22 @@ object frmMain: TfrmMain
       DropDownCount = 20
       ItemHeight = 13
       TabOrder = 1
+    end
+    object ComboBox2: TComboBox
+      Left = 264
+      Top = 12
+      Width = 32
+      Height = 21
+      DropDownCount = 26
+      ItemHeight = 13
+      TabOrder = 2
+    end
+    object Edit1: TEdit
+      Left = 297
+      Top = 12
+      Width = 38
+      Height = 21
+      TabOrder = 3
     end
   end
   object Panel2: TPanel
@@ -167,8 +190,8 @@ object frmMain: TfrmMain
     end
   end
   object UniConnection1: TUniConnection
-    Left = 608
-    Top = 8
+    Left = 654
+    Top = 44
   end
   object ADOConnection1: TADOConnection
     ConnectionString = 
@@ -176,7 +199,7 @@ object frmMain: TfrmMain
       'ue;User ID=sa;Initial Catalog=YkLis;Data Source=202.96.1.105'
     LoginPrompt = False
     Provider = 'SQLOLEDB.1'
-    Left = 576
-    Top = 8
+    Left = 622
+    Top = 44
   end
 end

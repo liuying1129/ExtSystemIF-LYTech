@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, DB, DBAccess, Uni, MemDS, Grids, DBGrids,
-  Buttons,OracleUniProvider, ADODB,IniFiles;
+  Buttons,OracleUniProvider, ADODB,IniFiles,StrUtils;
 
 type
   TfrmMain = class(TForm)
@@ -25,6 +25,9 @@ type
     Memo1: TMemo;
     LabeledEdit8: TLabeledEdit;
     SpeedButton1: TSpeedButton;
+    Label2: TLabel;
+    ComboBox2: TComboBox;
+    Edit1: TEdit;
     procedure LabeledEdit1KeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
@@ -68,6 +71,8 @@ var
 
   UniQryTemp22:TUniQuery;
   ADOTemp22:TADOQuery;
+
+  iLJH:Integer;
 begin
   if key<>13 then exit;
 
@@ -119,6 +124,7 @@ begin
       Memo1.Lines.Add('LIS对应的组合项目【'+ADOTemp22.fieldbyname('Id').AsString+'】'+ADOTemp22.fieldbyname('Name').AsString);
 
       ObjectYZMZ:=SO;
+      ObjectYZMZ.S['联机号'] := ifThen((trim(ComboBox2.Text)<>'')and(trim(Edit1.Text)<>''),ComboBox2.Text+Edit1.Text);
       ObjectYZMZ.S['LIS组合项目代码'] := ADOTemp22.fieldbyname('Id').AsString;
       ObjectYZMZ.S['条码号'] := UniQryTemp22.fieldbyname('barcode').AsString;
       ObjectYZMZ.S['外部系统项目申请编号'] := UniQryTemp22.fieldbyname('request_no').AsString;
@@ -162,7 +168,9 @@ begin
     UniQryTemp22.Next;
   end;
   UniQryTemp22.Free;
-  
+
+  if TryStrToInt(Edit1.Text,iLJH) then Edit1.Text:=RightStr('0000'+IntToStr(iLJH+1),4);
+
   (Sender as TLabeledEdit).Enabled:=true;
   if (Sender as TLabeledEdit).CanFocus then (Sender as TLabeledEdit).SetFocus; 
 end;
@@ -171,11 +179,14 @@ procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   MakeUniDBConn;
   MakeAdoDBConn;
+  
+  SetWindowLong(Edit1.Handle, GWL_STYLE, GetWindowLong(Edit1.Handle, GWL_STYLE) or ES_NUMBER);//只能输入数字
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
 begin
   LoadGroupName(ComboBox1,'select name from CommCode where TypeName=''检验组别'' AND SysName=''LIS'' group by name');
+  LoadGroupName(ComboBox2,'SELECT COMMWORD FROM clinicchkitem WHERE ISNULL(COMMWORD,'''')<>'''' GROUP BY COMMWORD');
 end;
 
 procedure TfrmMain.LoadGroupName(const comboBox: TcomboBox;
