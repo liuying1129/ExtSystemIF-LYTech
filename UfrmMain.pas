@@ -28,6 +28,7 @@ type
     Label2: TLabel;
     ComboBox2: TComboBox;
     Edit1: TEdit;
+    LabeledEdit9: TLabeledEdit;
     procedure LabeledEdit1KeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
@@ -102,6 +103,7 @@ begin
   LabeledEdit6.Text:=UniQryTemp22.fieldbyname('write_name').AsString;
   LabeledEdit7.Text:=UniQryTemp22.fieldbyname('barcode').AsString;
   LabeledEdit8.Text:=UniQryTemp22.fieldbyname('write_time').AsString;
+  LabeledEdit9.Text:=UniQryTemp22.fieldbyname('SPEC_TYPE').AsString;
 
   Memo1.Lines.Clear;
   while not UniQryTemp22.Eof do
@@ -128,10 +130,11 @@ begin
       ObjectYZMZ.S['LIS组合项目代码'] := ADOTemp22.fieldbyname('Id').AsString;
       ObjectYZMZ.S['条码号'] := UniQryTemp22.fieldbyname('barcode').AsString;
       ObjectYZMZ.S['外部系统项目申请编号'] := UniQryTemp22.fieldbyname('request_no').AsString;
+      ObjectYZMZ.S['样本类型'] := UniQryTemp22.fieldbyname('SPEC_TYPE').AsString;
 
       ArrayYZMX.AsArray.Add(ObjectYZMZ);
       ObjectYZMZ:=nil;
-      
+
       ADOTemp22.Next;
     end;
     ADOTemp22.Free;

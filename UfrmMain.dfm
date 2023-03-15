@@ -96,7 +96,7 @@ object frmMain: TfrmMain
     Align = alClient
     TabOrder = 1
     object LabeledEdit2: TLabeledEdit
-      Left = 184
+      Left = 180
       Top = 25
       Width = 60
       Height = 21
@@ -108,7 +108,7 @@ object frmMain: TfrmMain
       TabOrder = 0
     end
     object LabeledEdit3: TLabeledEdit
-      Left = 248
+      Left = 241
       Top = 25
       Width = 40
       Height = 21
@@ -120,7 +120,7 @@ object frmMain: TfrmMain
       TabOrder = 1
     end
     object LabeledEdit4: TLabeledEdit
-      Left = 304
+      Left = 283
       Top = 25
       Width = 50
       Height = 21
@@ -132,7 +132,7 @@ object frmMain: TfrmMain
       TabOrder = 2
     end
     object LabeledEdit5: TLabeledEdit
-      Left = 360
+      Left = 335
       Top = 25
       Width = 80
       Height = 21
@@ -144,7 +144,7 @@ object frmMain: TfrmMain
       TabOrder = 3
     end
     object LabeledEdit6: TLabeledEdit
-      Left = 448
+      Left = 417
       Top = 25
       Width = 60
       Height = 21
@@ -177,7 +177,7 @@ object frmMain: TfrmMain
       TabOrder = 6
     end
     object LabeledEdit8: TLabeledEdit
-      Left = 515
+      Left = 479
       Top = 25
       Width = 140
       Height = 21
@@ -188,10 +188,22 @@ object frmMain: TfrmMain
       ReadOnly = True
       TabOrder = 7
     end
+    object LabeledEdit9: TLabeledEdit
+      Left = 621
+      Top = 25
+      Width = 60
+      Height = 21
+      Color = clMenu
+      EditLabel.Width = 52
+      EditLabel.Height = 13
+      EditLabel.Caption = #26679#26412#31867#22411
+      ReadOnly = True
+      TabOrder = 8
+    end
   end
   object UniConnection1: TUniConnection
-    Left = 654
-    Top = 44
+    Left = 638
+    Top = 116
   end
   object ADOConnection1: TADOConnection
     ConnectionString = 
@@ -199,7 +211,7 @@ object frmMain: TfrmMain
       'ue;User ID=sa;Initial Catalog=YkLis;Data Source=202.96.1.105'
     LoginPrompt = False
     Provider = 'SQLOLEDB.1'
-    Left = 622
-    Top = 44
+    Left = 606
+    Top = 116
   end
 end
