@@ -71,11 +71,6 @@ function ShowOptionForm(const pCaption,pTabSheetCaption,pItemInfo,pInifile:Pchar
 const
   CryptStr='lc';
 
-  SELECT_LIS_COMBIN_ITEM='select ci.Id,ci.Name,ci.dept_DfValue '+
-                          'from combinitem ci,HisCombItem hci '+
-                          'where ci.Unid=hci.CombUnid and hci.ExtSystemId=''HIS'' '+
-                          'and hci.HisItem=:HisItem';
-
 procedure TfrmMain.LabeledEdit1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
@@ -121,7 +116,10 @@ begin
     ADOTemp22.Connection:=ADOConnection1;
     ADOTemp22.Close;
     ADOTemp22.SQL.Clear;
-    ADOTemp22.SQL.Text:=SELECT_LIS_COMBIN_ITEM;
+    ADOTemp22.SQL.Text:='select ci.Id,ci.Name,ci.dept_DfValue '+
+                        'from combinitem ci,HisCombItem hci '+
+                        'where ci.Unid=hci.CombUnid and hci.ExtSystemId=''HIS'' '+
+                        'and hci.HisItem=:HisItem';
     ADOTemp22.Parameters.ParamByName('HisItem').Value:=UniQryTemp22.fieldbyname('order_id').AsString;
     ADOTemp22.Open;
     while not ADOTemp22.Eof do
