@@ -80,7 +80,7 @@ procedure TfrmRequestInfo.FormShow(Sender: TObject);
 begin
   UniQuery1.Connection:=frmMain.UniConnection1;
   
-  DateTimePicker1.Date:=Date;
+  DateTimePicker1.Date:=Date-1;
   DateTimePicker2.Date:=Date;
 end;
 

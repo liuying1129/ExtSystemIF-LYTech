@@ -5,40 +5,50 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, DB, DBAccess, Uni, MemDS, Grids, DBGrids,
-  Buttons,OracleUniProvider, ADODB,IniFiles,StrUtils;
+  Buttons,OracleUniProvider, ADODB,IniFiles,StrUtils, VirtualTable;
 
 type
   TfrmMain = class(TForm)
     UniConnection1: TUniConnection;
     Panel1: TPanel;
-    Label1: TLabel;
     LabeledEdit1: TLabeledEdit;
-    ComboBox1: TComboBox;
     ADOConnection1: TADOConnection;
-    Panel2: TPanel;
+    SpeedButton1: TSpeedButton;
+    Label2: TLabel;
+    ComboBox2: TComboBox;
+    Edit1: TEdit;
+    GroupBox1: TGroupBox;
+    DataSource1: TDataSource;
+    VirtualTable1: TVirtualTable;
+    Panel3: TPanel;
     LabeledEdit2: TLabeledEdit;
     LabeledEdit3: TLabeledEdit;
     LabeledEdit4: TLabeledEdit;
     LabeledEdit5: TLabeledEdit;
     LabeledEdit6: TLabeledEdit;
     LabeledEdit7: TLabeledEdit;
-    Memo1: TMemo;
     LabeledEdit8: TLabeledEdit;
-    SpeedButton1: TSpeedButton;
-    Label2: TLabel;
-    ComboBox2: TComboBox;
-    Edit1: TEdit;
-    LabeledEdit9: TLabeledEdit;
+    LabeledEdit11: TLabeledEdit;
+    Edit2: TEdit;
+    Panel4: TPanel;
+    DBGrid1: TDBGrid;
+    BitBtn1: TBitBtn;
+    Label1: TLabel;
+    Label3: TLabel;
     procedure LabeledEdit1KeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
+    procedure VirtualTable1AfterOpen(DataSet: TDataSet);
+    procedure BitBtn1Click(Sender: TObject);
+    procedure VirtualTable1AfterScroll(DataSet: TDataSet);
   private
     { Private declarations }
     procedure LoadGroupName(const comboBox:TcomboBox;const ASel:string);
     function MakeAdoDBConn:boolean;
     function MakeUniDBConn:boolean;
+    procedure SingleRequestForm2Lis(const WorkGroup,His_Unid,patientname,sex,age,age_unit,deptname,check_doctor,RequestDate:String;const ABarcode,Surem1,checkid,SampleType,pkcombin_id:String);
   public
     { Public declarations }
   end;
@@ -60,28 +70,24 @@ function ShowOptionForm(const pCaption,pTabSheetCaption,pItemInfo,pInifile:Pchar
 
 const
   CryptStr='lc';
-  
+
+  SELECT_LIS_COMBIN_ITEM='select ci.Id,ci.Name,ci.dept_DfValue '+
+                          'from combinitem ci,HisCombItem hci '+
+                          'where ci.Unid=hci.CombUnid and hci.ExtSystemId=''HIS'' '+
+                          'and hci.HisItem=:HisItem';
+
 procedure TfrmMain.LabeledEdit1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
-  ObjectYZMZ:ISuperObject;
-  ArrayYZMX:ISuperObject;
-  ObjectJYYZ:ISuperObject;
-  ArrayJYYZ:ISuperObject;
-  BigObjectJYYZ:ISuperObject;
-
   UniQryTemp22:TUniQuery;
   ADOTemp22:TADOQuery;
 
   iLJH:Integer;
+  i:Integer;
+
+  VTTemp:TVirtualTable;
 begin
   if key<>13 then exit;
-
-  if trim(ComboBox1.Text)='' then
-  begin
-    MessageDlg('请先选择将要导入的工作组!',mtWarning,[MBOK],0);
-    exit;
-  end;
 
   if trim((Sender as TLabeledEdit).Text)='' then exit;
 
@@ -98,84 +104,94 @@ begin
 
   LabeledEdit2.Text:=UniQryTemp22.fieldbyname('name').AsString;
   LabeledEdit3.Text:=UniQryTemp22.fieldbyname('sex').AsString;
-  LabeledEdit4.Text:=UniQryTemp22.fieldbyname('age').AsString+UniQryTemp22.fieldbyname('age_unit').AsString;
+  LabeledEdit4.Text:=UniQryTemp22.fieldbyname('age').AsString;
+  Edit2.Text:=UniQryTemp22.fieldbyname('age_unit').AsString;
   LabeledEdit5.Text:=UniQryTemp22.fieldbyname('reqdept').AsString;
   LabeledEdit6.Text:=UniQryTemp22.fieldbyname('write_name').AsString;
   LabeledEdit7.Text:=UniQryTemp22.fieldbyname('barcode').AsString;
-  LabeledEdit8.Text:=UniQryTemp22.fieldbyname('write_time').AsString;
-  LabeledEdit9.Text:=UniQryTemp22.fieldbyname('SPEC_TYPE').AsString;
+  LabeledEdit8.Text:=FormatDateTime('yyyy-mm-dd hh:nn:ss',UniQryTemp22.fieldbyname('write_time').AsDateTime);
+  LabeledEdit11.Text:=UniQryTemp22.fieldbyname('REG_ID').AsString;
 
-  Memo1.Lines.Clear;
+  for i:=0 to (DBGrid1.columns.count-1) do DBGrid1.columns[i].readonly:=False;
+  VirtualTable1.Clear;
+
   while not UniQryTemp22.Eof do
   begin
-    if Memo1.Lines.Text<>'' then Memo1.Lines.Add('==============================================================================================');
-    Memo1.Lines.Add('【HIS组合项目代码】'+UniQryTemp22.fieldbyname('order_id').AsString+';【HIS组合项目名称】'+UniQryTemp22.fieldbyname('itemname').AsString+';【体检号】'+UniQryTemp22.fieldbyname('reg_id').AsString+';【外部系统项目申请编号】'+UniQryTemp22.fieldbyname('request_no').AsString);
-
     ADOTemp22:=TADOQuery.Create(nil);
     ADOTemp22.Connection:=ADOConnection1;
     ADOTemp22.Close;
     ADOTemp22.SQL.Clear;
-    ADOTemp22.SQL.Text:='select ci.Id,ci.Name '+
-                        'from combinitem ci,HisCombItem hci '+
-                        'where ci.Unid=hci.CombUnid and hci.ExtSystemId=''HIS'' '+
-                        'and hci.HisItem='''+UniQryTemp22.fieldbyname('order_id').AsString+''' ';
+    ADOTemp22.SQL.Text:=SELECT_LIS_COMBIN_ITEM;
+    ADOTemp22.Parameters.ParamByName('HisItem').Value:=UniQryTemp22.fieldbyname('order_id').AsString;
     ADOTemp22.Open;
-    ArrayYZMX:=SA([]);
     while not ADOTemp22.Eof do
     begin
-      Memo1.Lines.Add('LIS对应的组合项目【'+ADOTemp22.fieldbyname('Id').AsString+'】'+ADOTemp22.fieldbyname('Name').AsString);
-
-      ObjectYZMZ:=SO;
-      ObjectYZMZ.S['联机号'] := ifThen((trim(ComboBox2.Text)<>'')and(trim(Edit1.Text)<>''),ComboBox2.Text+Edit1.Text);
-      ObjectYZMZ.S['LIS组合项目代码'] := ADOTemp22.fieldbyname('Id').AsString;
-      ObjectYZMZ.S['条码号'] := UniQryTemp22.fieldbyname('barcode').AsString;
-      ObjectYZMZ.S['外部系统项目申请编号'] := UniQryTemp22.fieldbyname('request_no').AsString;
-      ObjectYZMZ.S['样本类型'] := UniQryTemp22.fieldbyname('SPEC_TYPE').AsString;
-
-      ArrayYZMX.AsArray.Add(ObjectYZMZ);
-      ObjectYZMZ:=nil;
+      VirtualTable1.Append;
+      VirtualTable1.FieldByName('外部系统项目申请编号').AsString:=UniQryTemp22.FieldByName('REQUEST_NO').AsString;
+      VirtualTable1.FieldByName('HIS项目代码').AsString:=UniQryTemp22.FieldByName('order_id').AsString;
+      VirtualTable1.FieldByName('HIS项目名称').AsString:=UniQryTemp22.FieldByName('ITEMNAME').AsString;
+      VirtualTable1.FieldByName('LIS项目代码').AsString:=ADOTemp22.FieldByName('Id').AsString;
+      VirtualTable1.FieldByName('LIS项目名称').AsString:=ADOTemp22.FieldByName('Name').AsString;
+      VirtualTable1.FieldByName('样本类型').AsString:=UniQryTemp22.FieldByName('SPEC_TYPE').AsString;
+      VirtualTable1.FieldByName('工作组').AsString:=ADOTemp22.FieldByName('dept_DfValue').AsString;
+      VirtualTable1.FieldByName('仪器字母').AsString:=ComboBox2.Text;
+      VirtualTable1.FieldByName('联机号').AsString:=Edit1.Text;
+      VirtualTable1.Post;
 
       ADOTemp22.Next;
     end;
     ADOTemp22.Free;
 
-    ObjectJYYZ:=SO;
-    ObjectJYYZ.S['患者姓名']:=UniQryTemp22.fieldbyname('name').AsString;
-    if UniQryTemp22.fieldbyname('sex').AsString='1' then ObjectJYYZ.S['患者性别']:='男'
-      else if UniQryTemp22.fieldbyname('sex').AsString='2' then ObjectJYYZ.S['患者性别']:='女'
-        else ObjectJYYZ.S['患者性别']:='未知';
-    if UniQryTemp22.fieldbyname('age_unit').AsString='Y' then ObjectJYYZ.S['患者年龄']:=UniQryTemp22.fieldbyname('age').AsString+'岁'
-      else if UniQryTemp22.fieldbyname('age_unit').AsString='M' then ObjectJYYZ.S['患者年龄']:=UniQryTemp22.fieldbyname('age').AsString+'月'
-        else if UniQryTemp22.fieldbyname('age_unit').AsString='D' then ObjectJYYZ.S['患者年龄']:=UniQryTemp22.fieldbyname('age').AsString+'天'
-          else ObjectJYYZ.S['患者年龄']:=UniQryTemp22.fieldbyname('age').AsString+UniQryTemp22.fieldbyname('age_unit').AsString;
-    ObjectJYYZ.S['申请科室']:=UniQryTemp22.fieldbyname('reqdept').AsString;
-    ObjectJYYZ.S['申请医生']:=UniQryTemp22.fieldbyname('write_name').AsString;
-    ObjectJYYZ.S['申请日期']:=FormatDateTime('yyyy-mm-dd hh:nn:ss',UniQryTemp22.fieldbyname('write_time').AsDateTime);
-    ObjectJYYZ.S['外部系统唯一编号']:=UniQryTemp22.fieldbyname('reg_id').AsString;
-    ObjectJYYZ.O['医嘱明细']:=ArrayYZMX;
-    ArrayYZMX:=nil;
-
-    ArrayJYYZ:=SA([]);
-    ArrayJYYZ.AsArray.Add(ObjectJYYZ);
-    ObjectJYYZ:=nil;
-
-    BigObjectJYYZ:=SO;
-    BigObjectJYYZ.S['JSON数据源']:='HIS';
-    BigObjectJYYZ.O['检验医嘱']:=ArrayJYYZ;
-    ArrayJYYZ:=nil;
-
-    //WriteLog(UnicodeToChinese(PChar(AnsiString(BigObjectJYYZ.AsJson))));
-    RequestForm2Lis(PChar(AnsiString(ADOConnection1.ConnectionString)),UnicodeToChinese(PChar(AnsiString(BigObjectJYYZ.AsJson))),PChar(ComboBox1.Text));
-    BigObjectJYYZ:=nil;
-
     UniQryTemp22.Next;
   end;
   UniQryTemp22.Free;
 
+  DBGrid1.columns[0].readonly:=True;
+  DBGrid1.columns[1].readonly:=True;
+  DBGrid1.columns[2].readonly:=True;
+  DBGrid1.columns[3].readonly:=True;
+  DBGrid1.columns[4].readonly:=True;
+  DBGrid1.columns[5].readonly:=True;
+  DBGrid1.columns[6].readonly:=True;
+
+  BitBtn1.Enabled:=VirtualTable1.Active and(VirtualTable1.RecordCount>1)and(trim(VirtualTable1.fieldbyname('仪器字母').AsString)<>'')and(trim(VirtualTable1.fieldbyname('联机号').AsString)<>'');
+
+  if (trim(VirtualTable1.fieldbyname('仪器字母').AsString)='')
+   or(trim(VirtualTable1.fieldbyname('联机号').AsString)='')
+   or(VirtualTable1.RecordCount=1)then
+  begin
+    VTTemp:=TVirtualTable.Create(nil);
+    VTTemp.Assign(VirtualTable1);//clone数据集
+    VTTemp.Open;
+    while not VTTemp.Eof do
+    begin
+      SingleRequestForm2Lis(
+        VTTemp.fieldbyname('工作组').AsString,
+        LabeledEdit11.Text,
+        LabeledEdit2.Text,
+        LabeledEdit3.Text,
+        LabeledEdit4.Text,
+        Edit2.Text,
+        LabeledEdit5.Text,
+        LabeledEdit6.Text,
+        LabeledEdit8.Text,
+        LabeledEdit7.Text,
+        VTTemp.fieldbyname('外部系统项目申请编号').AsString,
+        VTTemp.fieldbyname('仪器字母').AsString+VTTemp.fieldbyname('联机号').AsString,
+        VTTemp.fieldbyname('样本类型').AsString,
+        VTTemp.fieldbyname('LIS项目代码').AsString
+      );
+
+      VTTemp.Next;
+    end;
+    VTTemp.Close;
+    VTTemp.Free;
+  end;
+
   if TryStrToInt(Edit1.Text,iLJH) then Edit1.Text:=RightStr('0000'+IntToStr(iLJH+1),4);
 
   (Sender as TLabeledEdit).Enabled:=true;
-  if (Sender as TLabeledEdit).CanFocus then (Sender as TLabeledEdit).SetFocus; 
+  if (Sender as TLabeledEdit).CanFocus then (Sender as TLabeledEdit).SetFocus;
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
@@ -184,11 +200,14 @@ begin
   MakeAdoDBConn;
   
   SetWindowLong(Edit1.Handle, GWL_STYLE, GetWindowLong(Edit1.Handle, GWL_STYLE) or ES_NUMBER);//只能输入数字
+  
+  //设计期设置VirtualTable字段
+  VirtualTable1.IndexFieldNames:='工作组';//按工作组排序
+  VirtualTable1.Open;
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
 begin
-  LoadGroupName(ComboBox1,'select name from CommCode where TypeName=''检验组别'' AND SysName=''LIS'' group by name');
   LoadGroupName(ComboBox2,'SELECT COMMWORD FROM clinicchkitem WHERE ISNULL(COMMWORD,'''')<>'''' GROUP BY COMMWORD');
 end;
 
@@ -329,6 +348,142 @@ begin
     if ShowOptionForm('连接HIS数据库','连接HIS数据库',Pchar(ss),Pchar(ChangeFileExt(Application.ExeName,'.ini'))) then
       goto labReadIni else application.Terminate;
   end;
+end;
+
+procedure TfrmMain.VirtualTable1AfterOpen(DataSet: TDataSet);
+begin
+  if not DataSet.Active then exit;
+   
+  DBGrid1.Columns[0].Width:=30;//外部系统项目申请编号
+  DBGrid1.Columns[1].Width:=77;//HIS项目代码
+  DBGrid1.Columns[2].Width:=100;//HIS项目名称
+  DBGrid1.Columns[3].Width:=77;//LIS项目代码
+  DBGrid1.Columns[4].Width:=100;//LIS项目名称
+  DBGrid1.Columns[5].Width:=57;//样本类型
+  DBGrid1.Columns[6].Width:=80;//工作组
+  DBGrid1.Columns[7].Width:=55;//仪器字母
+  DBGrid1.Columns[8].Width:=42;//联机号
+end;
+
+procedure TfrmMain.BitBtn1Click(Sender: TObject);
+var
+  VTTemp:TVirtualTable;
+begin
+  if not VirtualTable1.Active then exit;
+  if VirtualTable1.RecordCount<=0 then exit;
+
+  LabeledEdit1.Enabled:=false;//为了防止没处理完又扫描下一个条码
+  (Sender as TBitBtn).Enabled:=false;//为了防止没处理完又点击导入
+
+  VTTemp:=TVirtualTable.Create(nil);
+  VTTemp.Assign(VirtualTable1);//clone数据集
+  VTTemp.Open;
+  while not VTTemp.Eof do
+  begin
+    SingleRequestForm2Lis(
+      VTTemp.fieldbyname('工作组').AsString,
+      LabeledEdit11.Text,
+      LabeledEdit2.Text,
+      LabeledEdit3.Text,
+      LabeledEdit4.Text,
+      Edit2.Text,
+      LabeledEdit5.Text,
+      LabeledEdit6.Text,
+      LabeledEdit8.Text,
+      LabeledEdit7.Text,
+      VTTemp.fieldbyname('外部系统项目申请编号').AsString,
+      VTTemp.fieldbyname('仪器字母').AsString+VTTemp.fieldbyname('联机号').AsString,
+      VTTemp.fieldbyname('样本类型').AsString,
+      VTTemp.fieldbyname('LIS项目代码').AsString
+    );
+
+    VTTemp.Next;
+  end;
+  VTTemp.Close;
+  VTTemp.Free;
+
+  LabeledEdit1.Enabled:=true;
+  if LabeledEdit1.CanFocus then LabeledEdit1.SetFocus; 
+  (Sender as TBitBtn).Enabled:=true;
+end;
+
+procedure TfrmMain.SingleRequestForm2Lis(const WorkGroup, His_Unid, patientname, sex,
+  age, age_unit, deptname, check_doctor, RequestDate, ABarcode, Surem1,
+  checkid, SampleType, pkcombin_id: String);
+var
+  ObjectYZMZ:ISuperObject;
+  ArrayYZMX:ISuperObject;
+  ObjectJYYZ:ISuperObject;
+  ArrayJYYZ:ISuperObject;
+  BigObjectJYYZ:ISuperObject;
+begin
+  if trim(WorkGroup)='' then exit;
+  if trim(pkcombin_id)='' then exit;
+
+  ArrayYZMX:=SA([]);
+
+  ObjectYZMZ:=SO;
+  ObjectYZMZ.S['联机号'] := checkid;
+  ObjectYZMZ.S['LIS组合项目代码'] := pkcombin_id;
+  ObjectYZMZ.S['条码号'] := ABarcode;
+  ObjectYZMZ.S['外部系统项目申请编号'] := Surem1;
+  ObjectYZMZ.S['样本类型'] := SampleType;
+
+  ArrayYZMX.AsArray.Add(ObjectYZMZ);
+  ObjectYZMZ:=nil;
+
+  ObjectJYYZ:=SO;
+  ObjectJYYZ.S['患者姓名']:=patientname;
+  if sex='1' then ObjectJYYZ.S['患者性别']:='男'
+    else if sex='2' then ObjectJYYZ.S['患者性别']:='女'
+      else ObjectJYYZ.S['患者性别']:='未知';
+  if age_unit='Y' then ObjectJYYZ.S['患者年龄']:=age+'岁'
+    else if age_unit='M' then ObjectJYYZ.S['患者年龄']:=age+'月'
+      else if age_unit='D' then ObjectJYYZ.S['患者年龄']:=age+'天'
+        else ObjectJYYZ.S['患者年龄']:=age+age_unit;
+  ObjectJYYZ.S['申请科室']:=deptname;
+  ObjectJYYZ.S['申请医生']:=check_doctor;
+  ObjectJYYZ.S['申请日期']:=RequestDate;
+  ObjectJYYZ.S['外部系统唯一编号']:=His_Unid;
+  ObjectJYYZ.O['医嘱明细']:=ArrayYZMX;
+  ArrayYZMX:=nil;
+
+  ArrayJYYZ:=SA([]);
+  ArrayJYYZ.AsArray.Add(ObjectJYYZ);
+  ObjectJYYZ:=nil;
+
+  BigObjectJYYZ:=SO;
+  BigObjectJYYZ.S['JSON数据源']:='HIS';
+  BigObjectJYYZ.O['检验医嘱']:=ArrayJYYZ;
+  ArrayJYYZ:=nil;
+
+  RequestForm2Lis(PChar(AnsiString(ADOConnection1.ConnectionString)),UnicodeToChinese(PChar(AnsiString(BigObjectJYYZ.AsJson))),'');
+  BigObjectJYYZ:=nil;
+end;
+
+procedure TfrmMain.VirtualTable1AfterScroll(DataSet: TDataSet);
+var
+  adotemp11:tadoquery;
+begin
+  //仪器字母下拉框
+  if not DataSet.Active then exit;
+  if DataSet.RecordCount<=0 then exit;
+
+  dbgrid1.Columns[7].PickList.Clear;
+  dbgrid1.Columns[7].DropDownRows:=26;
+
+  adotemp11:=tadoquery.Create(nil);
+  adotemp11.Connection:=ADOConnection1;
+  adotemp11.Close;
+  adotemp11.SQL.Clear;
+  adotemp11.SQL.Text:='SELECT COMMWORD FROM clinicchkitem WHERE ISNULL(COMMWORD,'''')<>'''' GROUP BY COMMWORD';
+  adotemp11.Open;
+  while not adotemp11.Eof do
+  begin
+    dbgrid1.Columns[7].PickList.add(adotemp11.fieldbyname('COMMWORD').AsString);
+    adotemp11.Next;
+  end;
+  adotemp11.Free;
 end;
 
 end.
