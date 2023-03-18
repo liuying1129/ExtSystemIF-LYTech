@@ -132,8 +132,8 @@ begin
       VirtualTable1.FieldByName('HIS项目名称').AsString:=UniQryTemp22.FieldByName('ITEMNAME').AsString;
       VirtualTable1.FieldByName('LIS项目代码').AsString:=ADOTemp22.FieldByName('Id').AsString;
       VirtualTable1.FieldByName('LIS项目名称').AsString:=ADOTemp22.FieldByName('Name').AsString;
-      VirtualTable1.FieldByName('样本类型').AsString:=UniQryTemp22.FieldByName('SPEC_TYPE').AsString;
       VirtualTable1.FieldByName('工作组').AsString:=ADOTemp22.FieldByName('dept_DfValue').AsString;
+      VirtualTable1.FieldByName('样本类型').AsString:=UniQryTemp22.FieldByName('SPEC_TYPE').AsString;
       VirtualTable1.FieldByName('仪器字母').AsString:=ComboBox2.Text;
       VirtualTable1.FieldByName('联机号').AsString:=Edit1.Text;
       VirtualTable1.Post;
@@ -202,7 +202,7 @@ begin
   SetWindowLong(Edit1.Handle, GWL_STYLE, GetWindowLong(Edit1.Handle, GWL_STYLE) or ES_NUMBER);//只能输入数字
   
   //设计期设置VirtualTable字段
-  VirtualTable1.IndexFieldNames:='工作组';//按工作组排序
+  VirtualTable1.IndexFieldNames:='工作组,样本类型';//按工作组、样本类型排序
   VirtualTable1.Open;
 end;
 
@@ -359,8 +359,8 @@ begin
   DBGrid1.Columns[2].Width:=100;//HIS项目名称
   DBGrid1.Columns[3].Width:=77;//LIS项目代码
   DBGrid1.Columns[4].Width:=100;//LIS项目名称
-  DBGrid1.Columns[5].Width:=57;//样本类型
-  DBGrid1.Columns[6].Width:=80;//工作组
+  DBGrid1.Columns[5].Width:=80;//工作组
+  DBGrid1.Columns[6].Width:=57;//样本类型
   DBGrid1.Columns[7].Width:=55;//仪器字母
   DBGrid1.Columns[8].Width:=42;//联机号
 end;
