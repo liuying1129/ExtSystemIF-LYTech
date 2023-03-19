@@ -12,9 +12,11 @@ object frmMain: TfrmMain
   Font.Height = -13
   Font.Name = #23435#20307
   Font.Style = []
+  KeyPreview = True
   OldCreateOrder = False
   Position = poScreenCenter
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -36,15 +38,8 @@ object frmMain: TfrmMain
       ShowHint = True
       OnClick = SpeedButton1Click
     end
-    object Label2: TLabel
-      Left = 9
-      Top = 15
-      Width = 39
-      Height = 13
-      Caption = #32852#26426#21495
-    end
     object LabeledEdit1: TLabeledEdit
-      Left = 294
+      Left = 143
       Top = 12
       Width = 170
       Height = 21
@@ -55,21 +50,15 @@ object frmMain: TfrmMain
       TabOrder = 0
       OnKeyDown = LabeledEdit1KeyDown
     end
-    object ComboBox2: TComboBox
-      Left = 51
-      Top = 12
-      Width = 38
-      Height = 21
-      DropDownCount = 26
-      ItemHeight = 13
+    object CheckBox1: TCheckBox
+      Left = 354
+      Top = 13
+      Width = 195
+      Height = 17
+      TabStop = False
+      Caption = #26080#38656#30830#35748','#25195#25551#21518#30452#25509#23548#20837'LIS'
       TabOrder = 1
-    end
-    object Edit1: TEdit
-      Left = 90
-      Top = 12
-      Width = 45
-      Height = 21
-      TabOrder = 2
+      OnClick = CheckBox1Click
     end
   end
   object GroupBox1: TGroupBox
@@ -92,6 +81,7 @@ object frmMain: TfrmMain
         Top = 26
         Width = 60
         Height = 21
+        TabStop = False
         Color = clMenu
         EditLabel.Width = 26
         EditLabel.Height = 13
@@ -104,6 +94,7 @@ object frmMain: TfrmMain
         Top = 26
         Width = 35
         Height = 21
+        TabStop = False
         Color = clMenu
         EditLabel.Width = 26
         EditLabel.Height = 13
@@ -116,6 +107,7 @@ object frmMain: TfrmMain
         Top = 26
         Width = 35
         Height = 21
+        TabStop = False
         Color = clMenu
         EditLabel.Width = 26
         EditLabel.Height = 13
@@ -128,6 +120,7 @@ object frmMain: TfrmMain
         Top = 26
         Width = 80
         Height = 21
+        TabStop = False
         Color = clMenu
         EditLabel.Width = 52
         EditLabel.Height = 13
@@ -140,6 +133,7 @@ object frmMain: TfrmMain
         Top = 26
         Width = 60
         Height = 21
+        TabStop = False
         Color = clMenu
         EditLabel.Width = 52
         EditLabel.Height = 13
@@ -152,6 +146,7 @@ object frmMain: TfrmMain
         Top = 26
         Width = 72
         Height = 21
+        TabStop = False
         Color = clMenu
         EditLabel.Width = 26
         EditLabel.Height = 13
@@ -164,6 +159,7 @@ object frmMain: TfrmMain
         Top = 26
         Width = 140
         Height = 21
+        TabStop = False
         Color = clMenu
         EditLabel.Width = 52
         EditLabel.Height = 13
@@ -176,6 +172,7 @@ object frmMain: TfrmMain
         Top = 26
         Width = 92
         Height = 21
+        TabStop = False
         Color = clMenu
         EditLabel.Width = 39
         EditLabel.Height = 13
@@ -188,6 +185,7 @@ object frmMain: TfrmMain
         Top = 26
         Width = 35
         Height = 21
+        TabStop = False
         Color = clMenu
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -205,26 +203,13 @@ object frmMain: TfrmMain
       Width = 686
       Height = 33
       Align = alBottom
-      TabOrder = 1
+      TabOrder = 2
       object Label1: TLabel
         Left = 152
         Top = 3
-        Width = 449
+        Width = 345
         Height = 13
-        Caption = #27880#65306'1'#12289#20462#25913#34920#26684#20013#30340#32852#26426#23383#27597#21450#32852#26426#21495#65292#20462#25913#24037#20316#32452#12289#26679#26412#31867#22411#30340#31532#19968#26465#21363#21487
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clBlue
-        Font.Height = -13
-        Font.Name = #23435#20307
-        Font.Style = []
-        ParentFont = False
-      end
-      object Label3: TLabel
-        Left = 178
-        Top = 18
-        Width = 462
-        Height = 13
-        Caption = '2'#12289#25195#25551#26465#30721#21518#65292#22914#26524#25353#38062#19981#21487#29992#65292#34920#31034#24050#33258#21160#23548#20837#65307#21542#21017#65292#38656#28857#20987#25353#38062#36827#34892#23548#20837
+        Caption = #27880#65306'1'#12289#20462#25913#30456#21516#24037#20316#32452#12289#30456#21516#26679#26412#31867#22411#31532#19968#26465#30340#32852#26426#21495#21363#21487
         Font.Charset = ANSI_CHARSET
         Font.Color = clBlue
         Font.Height = -13
@@ -237,7 +222,7 @@ object frmMain: TfrmMain
         Top = 4
         Width = 100
         Height = 25
-        Caption = #23548#20837'LIS'
+        Caption = #23548#20837'LIS-F5'
         TabOrder = 0
         OnClick = BitBtn1Click
       end
@@ -247,9 +232,10 @@ object frmMain: TfrmMain
       Top = 73
       Width = 686
       Height = 318
+      TabStop = False
       Align = alClient
       DataSource = DataSource1
-      TabOrder = 2
+      TabOrder = 1
       TitleFont.Charset = ANSI_CHARSET
       TitleFont.Color = clWindowText
       TitleFont.Height = -13
@@ -258,7 +244,7 @@ object frmMain: TfrmMain
     end
   end
   object UniConnection1: TUniConnection
-    Left = 623
+    Left = 630
     Top = 8
   end
   object ADOConnection1: TADOConnection
@@ -267,7 +253,7 @@ object frmMain: TfrmMain
       'ue;User ID=sa;Initial Catalog=YkLis;Data Source=202.96.1.105'
     LoginPrompt = False
     Provider = 'SQLOLEDB.1'
-    Left = 591
+    Left = 601
     Top = 8
   end
   object DataSource1: TDataSource
@@ -277,7 +263,6 @@ object frmMain: TfrmMain
   end
   object VirtualTable1: TVirtualTable
     AfterOpen = VirtualTable1AfterOpen
-    AfterScroll = VirtualTable1AfterScroll
     FieldDefs = <
       item
         Name = #22806#37096#31995#32479#39033#30446#30003#35831#32534#21495
@@ -315,11 +300,6 @@ object frmMain: TfrmMain
         Size = 50
       end
       item
-        Name = #20202#22120#23383#27597
-        DataType = ftString
-        Size = 20
-      end
-      item
         Name = #32852#26426#21495
         DataType = ftString
         Size = 20
@@ -327,11 +307,25 @@ object frmMain: TfrmMain
     Left = 72
     Top = 211
     Data = {
-      030009001400CDE2B2BFCFB5CDB3CFEEC4BFC9EAC7EBB1E0BAC5010014000000
+      030008001400CDE2B2BFCFB5CDB3CFEEC4BFC9EAC7EBB1E0BAC5010014000000
       00000B00484953CFEEC4BFB4FAC2EB01003200000000000B00484953CFEEC4BF
       C3FBB3C601006400000000000B004C4953CFEEC4BFB4FAC2EB01003200000000
       000B004C4953CFEEC4BFC3FBB3C601006400000000000600B9A4D7F7D7E90100
-      3200000000000800D1F9B1BEC0E0D0CD01003200000000000800D2C7C6F7D7D6
-      C4B801001400000000000600C1AABBFABAC50100140000000000000000000000}
+      3200000000000800D1F9B1BEC0E0D0CD01003200000000000600C1AABBFABAC5
+      0100140000000000000000000000}
+  end
+  object ActionList1: TActionList
+    Left = 573
+    Top = 8
+    object Action1: TAction
+      Caption = 'Action1'
+      ShortCut = 116
+      OnExecute = BitBtn1Click
+    end
+  end
+  object DosMove1: TDosMove
+    Active = True
+    Left = 545
+    Top = 8
   end
 end

@@ -88,7 +88,7 @@ procedure TfrmRequestInfo.UniQuery1AfterOpen(DataSet: TDataSet);
 begin
   if not DataSet.Active then exit;
   
-  dbgrid1.Columns[0].Width:=60;
+  dbgrid1.Columns[0].Width:=60;//Order_ID,HIS组合项目代码
   dbgrid1.Columns[1].Width:=42;//姓名
   dbgrid1.Columns[2].Width:=30;
   dbgrid1.Columns[3].Width:=30;
@@ -96,13 +96,14 @@ begin
   dbgrid1.Columns[5].Width:=72;
   dbgrid1.Columns[6].Width:=72;
   dbgrid1.Columns[7].Width:=60;
-  dbgrid1.Columns[8].Width:=40;
-  dbgrid1.Columns[9].Width:=42;
-  dbgrid1.Columns[10].Width:=80;
+  dbgrid1.Columns[8].Width:=20;//送检医生代码
+  dbgrid1.Columns[9].Width:=42;//送检医生名称
+  dbgrid1.Columns[10].Width:=20;//Order_Code
   dbgrid1.Columns[11].Width:=80;
   dbgrid1.Columns[12].Width:=80;
   dbgrid1.Columns[13].Width:=80;
   dbgrid1.Columns[14].Width:=80;
+  dbgrid1.Columns[15].Width:=57;//样本类型
 end;
 
 initialization

@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, DB, DBAccess, Uni, MemDS, Grids, DBGrids,
-  Buttons,OracleUniProvider, ADODB,IniFiles,StrUtils, VirtualTable;
+  Buttons,OracleUniProvider, ADODB,IniFiles,StrUtils, VirtualTable,
+  ActnList, DosMove;
 
 type
   TfrmMain = class(TForm)
@@ -14,9 +15,6 @@ type
     LabeledEdit1: TLabeledEdit;
     ADOConnection1: TADOConnection;
     SpeedButton1: TSpeedButton;
-    Label2: TLabel;
-    ComboBox2: TComboBox;
-    Edit1: TEdit;
     GroupBox1: TGroupBox;
     DataSource1: TDataSource;
     VirtualTable1: TVirtualTable;
@@ -34,18 +32,21 @@ type
     DBGrid1: TDBGrid;
     BitBtn1: TBitBtn;
     Label1: TLabel;
-    Label3: TLabel;
+    ActionList1: TActionList;
+    Action1: TAction;
+    CheckBox1: TCheckBox;
+    DosMove1: TDosMove;
     procedure LabeledEdit1KeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
-    procedure FormShow(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure VirtualTable1AfterOpen(DataSet: TDataSet);
     procedure BitBtn1Click(Sender: TObject);
-    procedure VirtualTable1AfterScroll(DataSet: TDataSet);
+    procedure CheckBox1Click(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
-    procedure LoadGroupName(const comboBox:TcomboBox;const ASel:string);
     function MakeAdoDBConn:boolean;
     function MakeUniDBConn:boolean;
     procedure SingleRequestForm2Lis(const WorkGroup,His_Unid,patientname,sex,age,age_unit,deptname,check_doctor,RequestDate:String;const ABarcode,Surem1,checkid,SampleType,pkcombin_id:String);
@@ -71,20 +72,127 @@ function ShowOptionForm(const pCaption,pTabSheetCaption,pItemInfo,pInifile:Pchar
 const
   CryptStr='lc';
 
+function GetNextValue(CurValue: string): string;//与LIS主程序的同名函数一样
+VAR
+  iCurValue,i:INTEGER;
+  rCurValue,sCurValue:STRING;
+begin
+    RESULT:='';
+    for i :=length(CurValue) downto 1 do
+    begin
+      if not(CurValue[i] in ['0'..'9']) then
+      begin
+        if i=length(CurValue) then //最后一个字符为非数字
+        begin
+          exit;
+        end;
+        iCurValue:=strtoint(copy(CurValue,i+1,length(CurValue)-i));
+        inc(iCurValue);
+        rCurValue:=Format('%.'+inttostr(length(CurValue)-i)+'d', [iCurValue]);//iMaxFieldValue
+        sCurValue:=copy(CurValue,1,i);
+        result:=sCurValue + rCurValue;
+        exit;
+      end else
+      begin
+        if i=1 then //全部为数字的情况
+        begin
+          iCurValue:=strtoint(CurValue);
+          inc(iCurValue);
+          rCurValue:=Format('%.'+inttostr(length(CurValue))+'d', [iCurValue]);//iMaxFieldValue
+          result:= rCurValue;
+          exit;
+        end;
+      end;
+    end;
+end;
+
+function GetFirstValue(CurValue: string): string;//与LIS主程序的同名函数一样
+VAR
+  rCurValue,sCurValue:STRING;
+  i:integer;
+begin
+    RESULT:='';
+    for i :=length(CurValue) downto 1 do
+    begin
+      if not(CurValue[i] in ['0'..'9']) then
+      begin
+        if i=length(CurValue) then //最后一个字符为非数字
+        begin
+          exit;
+        end;
+        rCurValue:=Format('%.'+inttostr(length(CurValue)-i)+'d', [1]);//iMaxFieldValue
+        sCurValue:=copy(CurValue,1,i);
+        result:=sCurValue + rCurValue;
+        exit;
+      end else
+      begin
+        if i=1 then //全部为数字的情况
+        begin
+          rCurValue:=Format('%.'+inttostr(length(CurValue))+'d', [1]);//iMaxFieldValue
+          result:= rCurValue;
+          exit;
+        end;
+      end;
+    end;
+end;
+  
+function GetMaxCheckId(const ACombin_ID:string;const AServerDate:tdate):string;//与LIS主程序的同名函数一样
+var
+  ini:tinifile;
+  CheckDate,CheckId:string;
+  sList:TStrings;
+  i:integer;
+begin
+  result:='';
+  
+  if trim(ACombin_ID)='' then exit;
+
+  ini:=tinifile.Create(ChangeFileExt(Application.ExeName,'.ini'));
+  CheckDate:=ini.ReadString(ACombin_ID,'检查日期','');
+  CheckId:=ini.ReadString(ACombin_ID,'联机号','');
+  ini.Free;
+  CheckId:=StringReplace(CheckId,'，',',',[rfReplaceAll,rfIgnoreCase]);
+  sList:=TStringList.Create;
+  ExtractStrings([','],[],PChar(CheckId),sList);
+  CheckId:='';
+  if datetostr(AServerDate)=CheckDate then
+  begin
+    for i :=0  to sList.Count-1 do
+    begin
+      CheckId:=CheckId+GetNextValue(sList[i])+',';
+    end;
+  end
+  else begin
+    for i :=0  to sList.Count-1 do
+    begin
+      CheckId:=CheckId+GetFirstValue(sList[i])+',';
+    end;
+  end;
+  sList.Free;
+  if(CheckId<>'')and(CheckId[length(CheckId)]=',')then CheckId:=copy(CheckId,1,length(CheckId)-1);
+    
+  result:=CheckId;
+end;
+  
 procedure TfrmMain.LabeledEdit1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
   UniQryTemp22:TUniQuery;
   ADOTemp22:TADOQuery;
 
-  iLJH:Integer;
   i:Integer;
 
   VTTemp:TVirtualTable;
+
+  ini:TIniFile;
+
+  PreWorkGroup:String;//该变量作用:仅保存工作组第一条记录的联机号
 begin
   if key<>13 then exit;
 
   if trim((Sender as TLabeledEdit).Text)='' then exit;
+
+  PreWorkGroup:='上一个工作组';//初始化为实际情况不可能出现的工作组名称即可
 
   (Sender as TLabeledEdit).Enabled:=false;//为了防止没处理完又扫描下一个条码
 
@@ -92,7 +200,8 @@ begin
   UniQryTemp22.Connection:=UniConnection1;
   UniQryTemp22.Close;
   UniQryTemp22.SQL.Clear;
-  UniQryTemp22.SQL.Text:='select * from LIS_REQUEST where barcode='''+(Sender as TLabeledEdit).Text+''' ';
+  UniQryTemp22.SQL.Text:='select * from LIS_REQUEST where barcode=:barcode';
+  UniQryTemp22.ParamByName('barcode').Value:=(Sender as TLabeledEdit).Text;
   UniQryTemp22.Open;
 
   (Sender as TLabeledEdit).Clear;
@@ -107,8 +216,8 @@ begin
   LabeledEdit8.Text:=FormatDateTime('yyyy-mm-dd hh:nn:ss',UniQryTemp22.fieldbyname('write_time').AsDateTime);
   LabeledEdit11.Text:=UniQryTemp22.fieldbyname('REG_ID').AsString;
 
-  for i:=0 to (DBGrid1.columns.count-1) do DBGrid1.columns[i].readonly:=False;
   VirtualTable1.Clear;
+  for i:=0 to (DBGrid1.columns.count-1) do DBGrid1.columns[i].readonly:=False;
 
   while not UniQryTemp22.Eof do
   begin
@@ -132,8 +241,7 @@ begin
       VirtualTable1.FieldByName('LIS项目名称').AsString:=ADOTemp22.FieldByName('Name').AsString;
       VirtualTable1.FieldByName('工作组').AsString:=ADOTemp22.FieldByName('dept_DfValue').AsString;
       VirtualTable1.FieldByName('样本类型').AsString:=UniQryTemp22.FieldByName('SPEC_TYPE').AsString;
-      VirtualTable1.FieldByName('仪器字母').AsString:=ComboBox2.Text;
-      VirtualTable1.FieldByName('联机号').AsString:=Edit1.Text;
+      VirtualTable1.FieldByName('联机号').AsString:=GetMaxCheckId(ADOTemp22.FieldByName('dept_DfValue').AsString,Date);
       VirtualTable1.Post;
 
       ADOTemp22.Next;
@@ -144,19 +252,9 @@ begin
   end;
   UniQryTemp22.Free;
 
-  DBGrid1.columns[0].readonly:=True;
-  DBGrid1.columns[1].readonly:=True;
-  DBGrid1.columns[2].readonly:=True;
-  DBGrid1.columns[3].readonly:=True;
-  DBGrid1.columns[4].readonly:=True;
-  DBGrid1.columns[5].readonly:=True;
-  DBGrid1.columns[6].readonly:=True;
+  for i:=0 to (DBGrid1.columns.count-2) do DBGrid1.columns[i].readonly:=True;//仅保留最后1列(联机号)可编辑
 
-  BitBtn1.Enabled:=VirtualTable1.Active and(VirtualTable1.RecordCount>1)and(trim(VirtualTable1.fieldbyname('仪器字母').AsString)<>'')and(trim(VirtualTable1.fieldbyname('联机号').AsString)<>'');
-
-  if (trim(VirtualTable1.fieldbyname('仪器字母').AsString)='')
-   or(trim(VirtualTable1.fieldbyname('联机号').AsString)='')
-   or(VirtualTable1.RecordCount=1)then
+  if CheckBox1.Checked then
   begin
     VTTemp:=TVirtualTable.Create(nil);
     VTTemp.Assign(VirtualTable1);//clone数据集
@@ -175,18 +273,27 @@ begin
         LabeledEdit8.Text,
         LabeledEdit7.Text,
         VTTemp.fieldbyname('外部系统项目申请编号').AsString,
-        VTTemp.fieldbyname('仪器字母').AsString+VTTemp.fieldbyname('联机号').AsString,
+        VTTemp.fieldbyname('联机号').AsString,
         VTTemp.fieldbyname('样本类型').AsString,
         VTTemp.fieldbyname('LIS项目代码').AsString
       );
+
+      //保存当前联机号
+      if (trim(VTTemp.fieldbyname('工作组').AsString)<>'')and(VTTemp.fieldbyname('工作组').AsString<>PreWorkGroup) then
+      begin
+        PreWorkGroup:=VTTemp.fieldbyname('工作组').AsString;
+        ini:=tinifile.Create(ChangeFileExt(Application.ExeName,'.ini'));
+        ini.WriteDate(VTTemp.fieldbyname('工作组').AsString,'检查日期',Date);
+        ini.WriteString(VTTemp.fieldbyname('工作组').AsString,'联机号',VTTemp.fieldbyname('联机号').AsString);
+        ini.Free;
+      end;
+      //==============
 
       VTTemp.Next;
     end;
     VTTemp.Close;
     VTTemp.Free;
   end;
-
-  if TryStrToInt(Edit1.Text,iLJH) then Edit1.Text:=RightStr('0000'+IntToStr(iLJH+1),4);
 
   (Sender as TLabeledEdit).Enabled:=true;
   if (Sender as TLabeledEdit).CanFocus then (Sender as TLabeledEdit).SetFocus;
@@ -196,43 +303,10 @@ procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   MakeUniDBConn;
   MakeAdoDBConn;
-  
-  SetWindowLong(Edit1.Handle, GWL_STYLE, GetWindowLong(Edit1.Handle, GWL_STYLE) or ES_NUMBER);//只能输入数字
-  
+
   //设计期设置VirtualTable字段
   VirtualTable1.IndexFieldNames:='工作组,样本类型';//按工作组、样本类型排序
   VirtualTable1.Open;
-end;
-
-procedure TfrmMain.FormShow(Sender: TObject);
-begin
-  LoadGroupName(ComboBox2,'SELECT COMMWORD FROM clinicchkitem WHERE ISNULL(COMMWORD,'''')<>'''' GROUP BY COMMWORD');
-end;
-
-procedure TfrmMain.LoadGroupName(const comboBox: TcomboBox;
-  const ASel: string);
-var
-  adotemp3:tadoquery;
-  tempstr:string;
-begin
-     adotemp3:=tadoquery.Create(nil);
-     adotemp3.Connection:=ADOConnection1;
-     adotemp3.Close;
-     adotemp3.SQL.Clear;
-     adotemp3.SQL.Text:=ASel;
-     adotemp3.Open;
-     
-     comboBox.Items.Clear;//加载前先清除comboBox项
-
-     while not adotemp3.Eof do
-     begin
-      tempstr:=trim(adotemp3.Fields[0].AsString);
-
-      comboBox.Items.Add(tempstr); //加载到comboBox
-
-      adotemp3.Next;
-     end;
-     adotemp3.Free;
 end;
 
 procedure TfrmMain.SpeedButton1Click(Sender: TObject);
@@ -359,19 +433,23 @@ begin
   DBGrid1.Columns[4].Width:=100;//LIS项目名称
   DBGrid1.Columns[5].Width:=80;//工作组
   DBGrid1.Columns[6].Width:=57;//样本类型
-  DBGrid1.Columns[7].Width:=55;//仪器字母
-  DBGrid1.Columns[8].Width:=42;//联机号
+  DBGrid1.Columns[7].Width:=90;//联机号
 end;
 
 procedure TfrmMain.BitBtn1Click(Sender: TObject);
 var
   VTTemp:TVirtualTable;
+  ini:TIniFile;
+
+  PreWorkGroup:String;//该变量作用:仅保存工作组第一条记录的联机号
 begin
   if not VirtualTable1.Active then exit;
   if VirtualTable1.RecordCount<=0 then exit;
 
+  PreWorkGroup:='上一个工作组';//初始化为实际情况不可能出现的工作组名称即可
+
   LabeledEdit1.Enabled:=false;//为了防止没处理完又扫描下一个条码
-  (Sender as TBitBtn).Enabled:=false;//为了防止没处理完又点击导入
+  BitBtn1.Enabled:=false;//为了防止没处理完又点击导入//因定义了ShortCut,故不能使用(Sender as TBitBtn)
 
   VTTemp:=TVirtualTable.Create(nil);
   VTTemp.Assign(VirtualTable1);//clone数据集
@@ -390,10 +468,21 @@ begin
       LabeledEdit8.Text,
       LabeledEdit7.Text,
       VTTemp.fieldbyname('外部系统项目申请编号').AsString,
-      VTTemp.fieldbyname('仪器字母').AsString+VTTemp.fieldbyname('联机号').AsString,
+      VTTemp.fieldbyname('联机号').AsString,
       VTTemp.fieldbyname('样本类型').AsString,
       VTTemp.fieldbyname('LIS项目代码').AsString
     );
+
+    //保存当前联机号
+    if (trim(VTTemp.fieldbyname('工作组').AsString)<>'')and(VTTemp.fieldbyname('工作组').AsString<>PreWorkGroup) then
+    begin
+      PreWorkGroup:=VTTemp.fieldbyname('工作组').AsString;
+      ini:=tinifile.Create(ChangeFileExt(Application.ExeName,'.ini'));
+      ini.WriteDate(VTTemp.fieldbyname('工作组').AsString,'检查日期',Date);
+      ini.WriteString(VTTemp.fieldbyname('工作组').AsString,'联机号',VTTemp.fieldbyname('联机号').AsString);
+      ini.Free;
+    end;
+    //==============
 
     VTTemp.Next;
   end;
@@ -402,7 +491,7 @@ begin
 
   LabeledEdit1.Enabled:=true;
   if LabeledEdit1.CanFocus then LabeledEdit1.SetFocus; 
-  (Sender as TBitBtn).Enabled:=true;
+  BitBtn1.Enabled:=true;//因定义了ShortCut,故不能使用(Sender as TBitBtn)
 end;
 
 procedure TfrmMain.SingleRequestForm2Lis(const WorkGroup, His_Unid, patientname, sex,
@@ -459,29 +548,33 @@ begin
   BigObjectJYYZ:=nil;
 end;
 
-procedure TfrmMain.VirtualTable1AfterScroll(DataSet: TDataSet);
-var
-  adotemp11:tadoquery;
+procedure TfrmMain.CheckBox1Click(Sender: TObject);
 begin
-  //仪器字母下拉框
-  if not DataSet.Active then exit;
-  if DataSet.RecordCount<=0 then exit;
+  BitBtn1.Enabled:=not (Sender as TCheckBox).Checked;
+end;
 
-  dbgrid1.Columns[7].PickList.Clear;
-  dbgrid1.Columns[7].DropDownRows:=26;
+procedure TfrmMain.FormDestroy(Sender: TObject);
+var
+  ConfigIni:tinifile;
+begin
+  ConfigIni:=tinifile.Create(ChangeFileExt(Application.ExeName,'.ini'));
 
-  adotemp11:=tadoquery.Create(nil);
-  adotemp11.Connection:=ADOConnection1;
-  adotemp11.Close;
-  adotemp11.SQL.Clear;
-  adotemp11.SQL.Text:='SELECT COMMWORD FROM clinicchkitem WHERE ISNULL(COMMWORD,'''')<>'''' GROUP BY COMMWORD';
-  adotemp11.Open;
-  while not adotemp11.Eof do
-  begin
-    dbgrid1.Columns[7].PickList.add(adotemp11.fieldbyname('COMMWORD').AsString);
-    adotemp11.Next;
-  end;
-  adotemp11.Free;
+  configini.WriteBool('Interface','ifDirect2LIS',CheckBox1.Checked);{记录是否扫描后直接导入LIS}
+
+  configini.Free;
+end;
+
+procedure TfrmMain.FormShow(Sender: TObject);
+var
+  configini:tinifile;
+begin
+  CONFIGINI:=TINIFILE.Create(ChangeFileExt(Application.ExeName,'.ini'));
+
+  CheckBox1.Checked:=configini.ReadBool('Interface','ifDirect2LIS',false);{记录是否扫描后直接导入LIS}
+
+  configini.Free;
+  
+  BitBtn1.Enabled:=not CheckBox1.Checked;
 end;
 
 end.
