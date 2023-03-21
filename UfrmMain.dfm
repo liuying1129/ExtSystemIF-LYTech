@@ -222,7 +222,7 @@ object frmMain: TfrmMain
         Top = 4
         Width = 100
         Height = 25
-        Caption = #23548#20837'LIS-F5'
+        Caption = #23548#20837'LIS-F3'
         TabOrder = 0
         OnClick = BitBtn1Click
       end
@@ -319,7 +319,7 @@ object frmMain: TfrmMain
     Top = 8
     object Action1: TAction
       Caption = 'Action1'
-      ShortCut = 116
+      ShortCut = 114
       OnExecute = BitBtn1Click
     end
   end
