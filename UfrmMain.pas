@@ -68,111 +68,10 @@ function UnicodeToChinese(const AUnicodeStr:PChar):PChar;stdcall;external 'LYFun
 procedure WriteLog(const ALogStr: Pchar);stdcall;external 'LYFunction.dll';
 function DeCryptStr(aStr: Pchar; aKey: Pchar): Pchar;stdcall;external 'LYFunction.dll';//解密
 function ShowOptionForm(const pCaption,pTabSheetCaption,pItemInfo,pInifile:Pchar):boolean;stdcall;external 'OptionSetForm.dll';
+function GetMaxCheckID(const AWorkGroup,APreDate,APreCheckID:PChar):PChar;stdcall;external 'LYFunction.dll';
 
 const
   CryptStr='lc';
-
-function GetNextValue(CurValue: string): string;//与LIS主程序的同名函数一样
-VAR
-  iCurValue,i:INTEGER;
-  rCurValue,sCurValue:STRING;
-begin
-    RESULT:='';
-    for i :=length(CurValue) downto 1 do
-    begin
-      if not(CurValue[i] in ['0'..'9']) then
-      begin
-        if i=length(CurValue) then //最后一个字符为非数字
-        begin
-          exit;
-        end;
-        iCurValue:=strtoint(copy(CurValue,i+1,length(CurValue)-i));
-        inc(iCurValue);
-        rCurValue:=Format('%.'+inttostr(length(CurValue)-i)+'d', [iCurValue]);//iMaxFieldValue
-        sCurValue:=copy(CurValue,1,i);
-        result:=sCurValue + rCurValue;
-        exit;
-      end else
-      begin
-        if i=1 then //全部为数字的情况
-        begin
-          iCurValue:=strtoint(CurValue);
-          inc(iCurValue);
-          rCurValue:=Format('%.'+inttostr(length(CurValue))+'d', [iCurValue]);//iMaxFieldValue
-          result:= rCurValue;
-          exit;
-        end;
-      end;
-    end;
-end;
-
-function GetFirstValue(CurValue: string): string;//与LIS主程序的同名函数一样
-VAR
-  rCurValue,sCurValue:STRING;
-  i:integer;
-begin
-    RESULT:='';
-    for i :=length(CurValue) downto 1 do
-    begin
-      if not(CurValue[i] in ['0'..'9']) then
-      begin
-        if i=length(CurValue) then //最后一个字符为非数字
-        begin
-          exit;
-        end;
-        rCurValue:=Format('%.'+inttostr(length(CurValue)-i)+'d', [1]);//iMaxFieldValue
-        sCurValue:=copy(CurValue,1,i);
-        result:=sCurValue + rCurValue;
-        exit;
-      end else
-      begin
-        if i=1 then //全部为数字的情况
-        begin
-          rCurValue:=Format('%.'+inttostr(length(CurValue))+'d', [1]);//iMaxFieldValue
-          result:= rCurValue;
-          exit;
-        end;
-      end;
-    end;
-end;
-  
-function GetMaxCheckId(const ACombin_ID:string;const AServerDate:tdate):string;//与LIS主程序的同名函数一样
-var
-  ini:tinifile;
-  CheckDate,CheckId:string;
-  sList:TStrings;
-  i:integer;
-begin
-  result:='';
-  
-  if trim(ACombin_ID)='' then exit;
-
-  ini:=tinifile.Create(ChangeFileExt(Application.ExeName,'.ini'));
-  CheckDate:=ini.ReadString(ACombin_ID,'检查日期','');
-  CheckId:=ini.ReadString(ACombin_ID,'联机号','');
-  ini.Free;
-  CheckId:=StringReplace(CheckId,'，',',',[rfReplaceAll,rfIgnoreCase]);
-  sList:=TStringList.Create;
-  ExtractStrings([','],[],PChar(CheckId),sList);
-  CheckId:='';
-  if datetostr(AServerDate)=CheckDate then
-  begin
-    for i :=0  to sList.Count-1 do
-    begin
-      CheckId:=CheckId+GetNextValue(sList[i])+',';
-    end;
-  end
-  else begin
-    for i :=0  to sList.Count-1 do
-    begin
-      CheckId:=CheckId+GetFirstValue(sList[i])+',';
-    end;
-  end;
-  sList.Free;
-  if(CheckId<>'')and(CheckId[length(CheckId)]=',')then CheckId:=copy(CheckId,1,length(CheckId)-1);
-    
-  result:=CheckId;
-end;
   
 procedure TfrmMain.LabeledEdit1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
@@ -187,6 +86,8 @@ var
   ini:TIniFile;
 
   PreWorkGroup:String;//该变量作用:仅保存工作组第一条记录的联机号
+
+  PreDate,PreCheckID:String;
 begin
   if key<>13 then exit;
 
@@ -233,6 +134,11 @@ begin
     ADOTemp22.Open;
     while not ADOTemp22.Eof do
     begin
+      ini:=tinifile.Create(ChangeFileExt(Application.ExeName,'.ini'));
+      PreDate:=ini.ReadString(ADOTemp22.FieldByName('dept_DfValue').AsString,'检查日期','');
+      PreCheckID:=ini.ReadString(ADOTemp22.FieldByName('dept_DfValue').AsString,'联机号','');
+      ini.Free;
+
       VirtualTable1.Append;
       VirtualTable1.FieldByName('外部系统项目申请编号').AsString:=UniQryTemp22.FieldByName('REQUEST_NO').AsString;
       VirtualTable1.FieldByName('HIS项目代码').AsString:=UniQryTemp22.FieldByName('order_id').AsString;
@@ -241,7 +147,7 @@ begin
       VirtualTable1.FieldByName('LIS项目名称').AsString:=ADOTemp22.FieldByName('Name').AsString;
       VirtualTable1.FieldByName('工作组').AsString:=ADOTemp22.FieldByName('dept_DfValue').AsString;
       VirtualTable1.FieldByName('样本类型').AsString:=UniQryTemp22.FieldByName('SPEC_TYPE').AsString;
-      VirtualTable1.FieldByName('联机号').AsString:=GetMaxCheckId(ADOTemp22.FieldByName('dept_DfValue').AsString,Date);
+      VirtualTable1.FieldByName('联机号').AsString:=GetMaxCheckId(PChar(ADOTemp22.FieldByName('dept_DfValue').AsString),PChar(PreDate),PChar(PreCheckID));
       VirtualTable1.Post;
 
       ADOTemp22.Next;
@@ -283,7 +189,7 @@ begin
       begin
         PreWorkGroup:=VTTemp.fieldbyname('工作组').AsString;
         ini:=tinifile.Create(ChangeFileExt(Application.ExeName,'.ini'));
-        ini.WriteDate(VTTemp.fieldbyname('工作组').AsString,'检查日期',Date);
+        ini.WriteString(VTTemp.fieldbyname('工作组').AsString,'检查日期',FormatDateTime('YYYY-MM-DD',Date));
         ini.WriteString(VTTemp.fieldbyname('工作组').AsString,'联机号',VTTemp.fieldbyname('联机号').AsString);
         ini.Free;
       end;
@@ -478,7 +384,7 @@ begin
     begin
       PreWorkGroup:=VTTemp.fieldbyname('工作组').AsString;
       ini:=tinifile.Create(ChangeFileExt(Application.ExeName,'.ini'));
-      ini.WriteDate(VTTemp.fieldbyname('工作组').AsString,'检查日期',Date);
+      ini.WriteString(VTTemp.fieldbyname('工作组').AsString,'检查日期',FormatDateTime('YYYY-MM-DD',Date));
       ini.WriteString(VTTemp.fieldbyname('工作组').AsString,'联机号',VTTemp.fieldbyname('联机号').AsString);
       ini.Free;
     end;
