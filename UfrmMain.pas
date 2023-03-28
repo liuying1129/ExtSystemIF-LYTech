@@ -36,6 +36,7 @@ type
     Action1: TAction;
     CheckBox1: TCheckBox;
     DosMove1: TDosMove;
+    Memo1: TMemo;
     procedure LabeledEdit1KeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
@@ -132,6 +133,10 @@ begin
                         'and hci.HisItem=:HisItem';
     ADOTemp22.Parameters.ParamByName('HisItem').Value:=UniQryTemp22.fieldbyname('order_id').AsString;
     ADOTemp22.Open;
+
+    //LIS中没有相对应的项目
+    if ADOTemp22.RecordCount<=0 then Memo1.Lines.Add(UniQryTemp22.fieldbyname('order_id').AsString+'【'+UniQryTemp22.fieldbyname('ITEMNAME').AsString+'】在LIS中没有对照'); 
+
     while not ADOTemp22.Eof do
     begin
       ini:=tinifile.Create(ChangeFileExt(Application.ExeName,'.ini'));

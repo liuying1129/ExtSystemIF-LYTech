@@ -231,7 +231,7 @@ object frmMain: TfrmMain
       Left = 2
       Top = 73
       Width = 686
-      Height = 318
+      Height = 229
       TabStop = False
       Align = alClient
       DataSource = DataSource1
@@ -241,6 +241,16 @@ object frmMain: TfrmMain
       TitleFont.Height = -13
       TitleFont.Name = #23435#20307
       TitleFont.Style = []
+    end
+    object Memo1: TMemo
+      Left = 2
+      Top = 302
+      Width = 686
+      Height = 89
+      Align = alBottom
+      Color = clMenu
+      ReadOnly = True
+      TabOrder = 3
     end
   end
   object UniConnection1: TUniConnection
