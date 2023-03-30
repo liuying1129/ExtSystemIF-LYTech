@@ -286,7 +286,7 @@ end;
 
 function TfrmMain.MakeUniDBConn: boolean;
 var
-  ss: string;
+  newconnstr,ss: string;
   Ini: tinifile;
   userid, password, datasource, provider: string;
 
@@ -310,14 +310,18 @@ begin
   for i :=1  to length(pDeStr) do password[i]:=pDeStr[i-1];
   //==========
 
+  //Provider Name为Oracle时,Server属性格式:Host IP:Port:SID,如10.195.252.13:1521:kthis1
+  //Oracle的默认Port为1521
+  //查询Oracle SID:select instance_name from V$instance;
+  newconnstr :='';
+  newconnstr := newconnstr + 'Provider Name=' + provider + ';';
+  newconnstr := newconnstr + 'Login Prompt=False;Direct=True;';
+  newconnstr := newconnstr + 'Data Source=' + datasource + ';';
+  newconnstr := newconnstr + 'User ID=' + userid + ';';
+  newconnstr := newconnstr + 'Password=' + password + ';';
   try
     UniConnection1.Connected := false;
-    UniConnection1.ProviderName:=provider;
-    UniConnection1.Server:=datasource;//'10.161.97.1:1521:orcl';
-    UniConnection1.Username:=userid;
-    UniConnection1.Password:=password;
-    UniConnection1.SpecificOptions.Values['Direct']:='True';
-    UniConnection1.LoginPrompt:=false;
+    UniConnection1.ConnectString:=newconnstr;
     UniConnection1.Connect;
     result:=true;
   except

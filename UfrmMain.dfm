@@ -229,7 +229,7 @@ object frmMain: TfrmMain
     end
     object DBGrid1: TDBGrid
       Left = 2
-      Top = 73
+      Top = 162
       Width = 686
       Height = 229
       TabStop = False
@@ -244,10 +244,10 @@ object frmMain: TfrmMain
     end
     object Memo1: TMemo
       Left = 2
-      Top = 302
+      Top = 73
       Width = 686
       Height = 89
-      Align = alBottom
+      Align = alTop
       Color = clMenu
       ReadOnly = True
       TabOrder = 3
