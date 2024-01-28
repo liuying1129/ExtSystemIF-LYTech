@@ -26,7 +26,9 @@ select
 	(select top 1 w.id from worker w where w.name=cc.report_doctor) as FINISH_EMPID,--检查医生
 	cc.His_Unid as REG_ID,--体检号
 	cv.itemid as TEST_ITEM_ID,--项目代码或者抗生素名
-	'K0' as BRANCH_CODE--医疗机构
+	'K0' as BRANCH_CODE,--医疗机构
+	dbo.uf_Reference_Value_B1(cv.min_value,cv.max_value) as MinV,
+	dbo.uf_Reference_Value_B2(cv.min_value,cv.max_value) as MaxV
 from chk_con cc,chk_valu cv
 where cc.unid=cv.pkunid
 AND ISNULL(cc.report_doctor,'')<>''
@@ -52,7 +54,9 @@ select
 	(select top 1 w.id from worker w where w.name=cc.report_doctor) as FINISH_EMPID,--检查医生
 	cc.His_Unid as REG_ID,--体检号
 	cv.itemid as TEST_ITEM_ID,--项目代码或者抗生素名
-	'K0' as BRANCH_CODE--医疗机构
+	'K0' as BRANCH_CODE,--医疗机构
+	dbo.uf_Reference_Value_B1(cv.min_value,cv.max_value) as MinV,
+	dbo.uf_Reference_Value_B2(cv.min_value,cv.max_value) as MaxV
 from chk_con_bak cc WITH(NOLOCK),chk_valu_bak cv WITH(NOLOCK)
 where cc.unid=cv.pkunid
 and isnull(cv.itemvalue,'')<>''
