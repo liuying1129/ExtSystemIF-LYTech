@@ -133,9 +133,11 @@ SELECT id,name FROM worker
 
 GO
 
+--创建用户YKPEIS/Yk123
+--配置用户权限
 GRANT SELECT ON view_UT_LIS_RESULT TO YKPEIS
 GRANT SELECT ON view_UT_LIS_RESULT_Header TO YKPEIS
-GRANT SELECT ON view_LIS_Worker
+GRANT SELECT ON view_LIS_Worker TO YKPEIS
 GO
 
 sp_refreshview  'dbo.view_UT_LIS_RESULT'
